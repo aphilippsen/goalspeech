@@ -7,9 +7,9 @@ import scipy.io.wavfile
 from goalspeech.experiment import load_experiment
 from goalspeech.evaluate import competence, distance
 
-main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/act-ad/"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/act-ad/"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/act-fi/"
-#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-ad/"
+main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-ad/"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-fi/"
 runs=30
 
@@ -32,7 +32,7 @@ evaluation_interval = 10
 # which evaluations to perform
 generate_sounds = False
 generate_generalization_sounds = False
-generate_interpolations = True
+generate_interpolations = False
 
 interp_factor = 0.1
 interpolations = np.arange(0, 1+interp_factor, interp_factor)
@@ -339,7 +339,7 @@ with open(os.path.join(main_results_dir, "iterations-arNoise.txt"), "w") as f:
         f.write("\tmean" + i)
     f.write('\n')
     for t in np.arange(0, meanArNoise.shape[0], evaluation_interval):
-        f.write(str(iterations[t]))
+        f.write(str(iterations[t]+evaluation_interval))
         for i in range(len(expData.ambSp.sequences)):
             f.write("\t" + str(np.mean(meanArNoise[t:t+evaluation_interval,i])))
         f.write("\n")
