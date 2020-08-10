@@ -43,7 +43,7 @@ class OnlineWeightedRBF(Learner):
         if X.ndim == 1:
             X = np.reshape(X, (1,-1))
         if Y.ndim == 1:
-            X = np.reshape(X, (1,-1))
+            Y = np.reshape(Y, (1,-1))
         numSamples = np.size(X,0)
 
         if len(weights) == 0:
