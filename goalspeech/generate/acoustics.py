@@ -82,10 +82,14 @@ class AmbientSpeech:
         self.min_frame_num = 0
 
         # used as name for the feature file
+        try:
+            dmpstr = "-DMBPF-" + str(config["dynamics"]["dmpbfs"])
+        except Exception:
+            dmpstr = ""
         self.num_samples_per_sequence = int(config["ambientSpeech"]["numsamplespersequence"])
-        self.featureString = "features-" + "".join(self.sequences) + "-" + str(self.num_samples_per_sequence) + '-' + config["ambientSpeech"]["arNoise"].replace(" ", "-") + "-" + self.featureMode
+        self.featureString = "features-" + "".join(self.sequences) + "-" + str(self.num_samples_per_sequence) + dmpstr + '-' + config["ambientSpeech"]["arNoise"].replace(" ", "-") + "-" + self.featureMode
 
-    def setAmbientSpeech(self, soundsNorm, classifications):
+    def setAmbientSpeech(self, soundsNorm, classifications, minimum_energy = None):
 
         self.sounds = soundsNorm
         self.classifications = classifications
@@ -120,15 +124,23 @@ class AmbientSpeech:
             scipy.io.savemat(featureFile, contents)
 
         # filter out invalid speech sounds
+        self.invalids = np.zeros(numSamples)
+        """
         hist, bins = np.histogram(self.signalEnergy)
         print("Histogram of signal energy:")
         print(hist)
         print(bins)
-        self.invalids = np.zeros(numSamples)
         minimum_energy = bins[:-1][np.cumsum(hist)>100][0]
-        # minimum_energy = (np.median(self.signalEnergy[0:self.num_samples_per_sequence])-2*np.std(self.signalEnergy[0:self.num_samples_per_sequence]))
+        """
+        if minimum_energy is None:
+            # try to determine it automatically
+            #minimum_energy = (np.median(self.signalEnergy[0:self.num_samples_per_sequence])-2*np.std(self.signalEnergy[0:self.num_samples_per_sequence]))
+            minimum_energy = np.median(self.signalEnergy)-2*np.std(self.signalEnergy)
+        
         self.invalids[self.signalEnergy<minimum_energy] = 1
         #self.invalids[self.signalEnergy<(np.mean(self.signalEnergy[0:self.num_samples_per_sequence])-2*np.std(self.signalEnergy[0:self.num_samples_per_sequence]))] = 1
+
+        
 
         # calculate feature normalization
         self.normFeatures = self.normalizeFeatures(self.rawFeatures)
@@ -241,6 +253,8 @@ class AmbientSpeech:
         num_sequences = len(self.sequences)
         non_invalids_max = int(self.num_samples_per_sequence - np.max([np.sum(self.invalids[x*self.num_samples_per_sequence:x*self.num_samples_per_sequence+self.num_samples_per_sequence]) for x in np.arange(num_sequences)]))
         print("Maximum number of valid samples per sequence: " + str(non_invalids_max))
+        if non_invalids_max == 0:
+            raise ValueError('Not enough valid samples per sequence are available, they were likely filtered out as "invalid". Try to inspect AmbientSpeech.signalEnergy and adjust the minimum_energy parameter in the setAmbientSpeech function.')
 
         # clean up ambient speech by reducing it, leaving out invalids
         self.normFeatures_for_GS = np.empty((int(num_sequences * non_invalids_max),), dtype=object)
@@ -460,3 +474,6 @@ class AmbientSpeech:
         if d['featureMode'] == 'formants_full' and d['embMethod'] == 'f':
             d['mappingLearner'].preprocessingFct = lambda x: np.mean(x,0)
         self.__dict__.update(d)
+        
+        
+

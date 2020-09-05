@@ -1,5 +1,7 @@
 import numpy as np
 from dtw import dtw
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
 
 class WeightingScheme:
     def __init__(self, gb):
@@ -75,7 +77,7 @@ class TargetWeighting(WeightingScheme):
 
 class SyllableStructureWeighting(WeightingScheme):
 
-    def __init__(self, gb, ambSp, min_limit = 5e6, max_limit = 10e6):
+    def __init__(self, gb, ambSp, min_limit = 0, max_limit = 700):
         WeightingScheme.__init__(self, gb)
         self.eval_window_width = 100
         self.gb = gb
@@ -94,7 +96,12 @@ class SyllableStructureWeighting(WeightingScheme):
                 h.append(np.sum(structure_home[j:j+self.eval_window_width]))
             self.compare_structures.append(np.array(h, dtype='float'))
 
-    def calcWeights(self):
+
+    def calcWeightsOld(self):
+        import time
+
+        start = time.time()
+
         w = np.zeros(self.gb.numRollouts)
 
         dists = np.zeros(len(self.gb.allWavs))
@@ -128,6 +135,59 @@ class SyllableStructureWeighting(WeightingScheme):
         dists[dists<self.min_limit] = self.min_limit
         dists = dists - self.min_limit
         w = 1 - dists/np.max(dists)
+        
+        end = time.time()
+        print('CalcWeights (SyllableWeighting): elapsed time (in sec) ' + str(end - start))
+
+        return w
+
+    # Improving the DTW to not require the eval_window_width
+    
+    
+    def calcWeights(self):
+    
+        #print('Comparison to previous function:')
+        #wOld = self.calcWeightsOld()
+        #print(wOld)
+    
+        #import time
+        #start = time.time()
+        
+        jump_size = 100
+        # one weight for each rollout should be computed
+        w = np.zeros(self.gb.numRollouts)
+        dists = np.zeros(len(self.gb.allWavs))
+
+        comp_sound = np.abs(self.compare_sounds[0][0])
+                        
+        for i in range(len(self.gb.allWavs)):
+            current_sound = np.abs(self.gb.allWavs[i])
+
+        
+            min_d = self.max_limit * 32767
+            #for k in [0]: # range(len(self.compare_sounds)):
+            distance, _ = fastdtw(current_sound[0:len(current_sound):jump_size], comp_sound[0:len(comp_sound):jump_size], dist=euclidean)
+            if distance < min_d:
+                min_d = distance
+
+            #except:
+            #    min_d = self.max_limit * 32767
+            
+            dists[i] = min_d
+
+        print(dists)
+        # clip to range
+        dists = dists / 32767
+        dists[dists>self.max_limit] = self.max_limit
+        dists[dists<self.min_limit] = self.min_limit
+        dists = dists - self.min_limit
+        w = 1 - dists/np.max(dists)
+
+        #end = time.time()
+        #print('CalcWeights (SyllableWeighting): elapsed time (in sec) ' + str(end - start))
+        
+        #np.save('wOld_' + str(end) + '.npy', wOld)
+        #np.save('wNew_' + str(end) + '.npy', w)
         
         return w
 

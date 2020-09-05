@@ -15,6 +15,8 @@ from goalspeech.experiment import save_experiment
 
 import goalspeech.config
 
+picture_file_format = ".png"
+
 # articulatory data as shapes, realized as 500~ms long vowels
 
 shapes = sp.getArticulatoryShapes(sequences)
@@ -139,7 +141,7 @@ for r in range(runs):
                 ax.plot(expl[0], expl[1], color='purple', marker='*', linestyle='None')
         ax.set_xlim([-1.1, 1.1])
         ax.set_ylim([-1.1, 1.1])
-        fig.savefig(os.path.join(save_directory, 'exploration-' + str(it) + '.pdf'))
+        fig.savefig(os.path.join(save_directory, 'exploration-' + str(it) + picture_file_format))
         plt.close()
 
         # plot the current basic functions of the inverse model learner
@@ -147,7 +149,7 @@ for r in range(runs):
         for i in range(len(sgb.invmodel.center.C)):
             circ = mpl.patches.Circle((sgb.invmodel.center.C[i][0], sgb.invmodel.center.C[i][1]), radius=sgb.invmodel.center.radius, edgecolor = 'black', facecolor='orange', alpha = 0.5)
             plt.gca().add_patch(circ)
-        fig.savefig(os.path.join(save_directory, 'invmodel-' + str(it) + '.pdf'))
+        fig.savefig(os.path.join(save_directory, 'invmodel-' + str(it) + picture_file_format))
         plt.close()
 
         # plot the current workspace state
@@ -155,7 +157,7 @@ for r in range(runs):
         for i in range(len(sgb.wsm.S.C)):
             circ = mpl.patches.Circle((sgb.wsm.S.C[i][0], sgb.wsm.S.C[i][1]), radius=sgb.wsm.S.radius, edgecolor = 'black', facecolor='darkgrey', alpha = 0.5)
             plt.gca().add_patch(circ)
-        fig.savefig(os.path.join(save_directory, 'wsm-' + str(it) + '.pdf'))
+        fig.savefig(os.path.join(save_directory, 'wsm-' + str(it) + picture_file_format))
         plt.close()
 
 		# write information to file

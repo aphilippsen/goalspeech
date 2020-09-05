@@ -4,6 +4,7 @@ import numpy as np       # for array operations
 import os                # for retrieving path names
 import scipy.io.wavfile  # for writing wav file
 import sounddevice as sd # for playing back audio
+from tqdm import tqdm    # progress bar for sound production
 
 class VTLSpeechProduction:
 
@@ -187,7 +188,7 @@ class VTLSpeechProduction:
 
         if params.dtype == object:
             audio = np.empty(np.size(params), dtype = object)
-            for i in range(np.size(params)):
+            for i in tqdm(range(np.size(params))):
                 audio[i] = self.produceSound(params[i], play_sound)
             return audio
 

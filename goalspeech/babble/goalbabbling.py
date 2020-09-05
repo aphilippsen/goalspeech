@@ -178,6 +178,7 @@ class SkillGoalBabbling(GoalBabbling):
 
         # legacy: estimate which cluster is currently explored
         self.currentClusterIdxEstimation = np.argmin(self.wsm.metric.distance(self.tskCurrent, self.wsm.targetDist.means_))
+        print("Target in cluster " + str(self.currentClusterIdxEstimation))
 
         # get inv estimates of tRolloutsDesired
         print("Get inverse estimates")

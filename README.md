@@ -21,6 +21,8 @@ Can be installed e.g. via pip:
 * sounddevice (you might need to install the package for the PortAudio library first in some Linux distributions, libportaudio2)
 * torch
 * oct2py (If GBFB features should be used, see below.)
+* tqdm (progress bar for sound production)
+* fastdtw (Comparison of sounds using the syllable weighting scheme)
 
 ### Articulatory system ###
 

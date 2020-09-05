@@ -59,7 +59,7 @@ class OnlineWeightedRBF(Learner):
 
                 # how the learner currently estimates X
                 yhat = self.apply(X[p[i],:])
-                yhat = yhat[0] # only one sample
+                yhat = yhat[0,:] # only one sample
 
                 # update clustering
                 self.center.cluster(X[p[i],:])

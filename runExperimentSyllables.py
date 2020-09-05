@@ -16,6 +16,8 @@ from goalspeech.experiment import save_experiment
 
 import goalspeech.config
 
+picture_file_format = ".png"
+
 gestureFileDir = config['locations']['gestureFileDir']
 #trajectories = sp.getArticulatoryTrajectories(sequences, gestureFileDir)
 trajectories = sp.getArticulatoryTrajectories(sequences, gestureFileDir)
@@ -51,7 +53,7 @@ arParamsOff = np.array([0, 0, 0, 0, 0,       # HX, HY, JX, JA, LP
 
 dataPath = os.path.join(os.path.abspath(config['locations']['dataDir']), config['vocalTract']['lib'])
 os.makedirs(dataPath, exist_ok=True)
-arDataID = "arData-" + "".join(sequences) + "-" + str(numSamplesPerSequence) + '-' + config["ambientSpeech"]["arNoise"].replace(" ", "-")
+arDataID = "arData-" + "".join(sequences) + "-" + str(numSamplesPerSequence) + "-DMPBF-" + str(dmp_bfs) + "-" + config["ambientSpeech"]["arNoise"].replace(" ", "-")
 arDataFile = os.path.join(dataPath, arDataID + ".mat")
 
 #soundDict = {}
@@ -73,7 +75,7 @@ for s in soundsNorm:
     # sound = np.concatenate((sound, s)) # normalization method 2
     sound = np.concatenate((sound, np.zeros(5000,)))
 sound = np.concatenate((sound, np.zeros(5000,)))
-scipy.io.wavfile.write(os.path.join(main_directory, 'dmp-sounds.wav'), audiosamplingrate, sound.astype('int16'))
+scipy.io.wavfile.write(os.path.join(main_directory, 'dmp-sounds_BFs-' + str(dmp_bfs) + '-.wav'), audiosamplingrate, sound.astype('int16'))
 
 
 print("Try to load articulatory data…")
@@ -89,7 +91,8 @@ else:
 
     arData.generateArVariations(numSamplesPerSequence, arNoise)
     originalArVariations = arData.denormalize(arData.ar)
-    soundsNorm = sp.produceSound(arData.rolloutArData(arData.ar))
+    rolledOut = arData.rolloutArData(arData.ar)
+    soundsNorm = sp.produceSound(rolledOut)
     for i in range(len(soundsNorm)):
         soundsNorm[i] = soundsNorm[i].reshape((1,-1))
     contents = {'originalArVariations': originalArVariations, 'soundsNorm': soundsNorm}
@@ -118,7 +121,7 @@ try:
     for i in range(len(soundsNorm)):
         plt.figure() 
         plt.plot(np.arange(soundsNorm[i].shape[1]), soundsNorm[i][0,:]) 
-        plt.savefig(os.path.join(os.path.join(dataPath, arDataID), "sound-"+str(i)+".png"))
+        plt.savefig(os.path.join(os.path.join(dataPath, arDataID), "sound-"+str(i)+ picture_file_format))
         plt.close()
 
 except:
@@ -143,7 +146,6 @@ for r in range(runs):
     ambSp.locateTargets()
     (fig, ax) = ambSp.plot(save_directory=save_directory)
     plt.close(fig)
-
 
     # define forward model
     fwdmodel = ForwardModel(sp, ambSp, arData)
@@ -183,7 +185,7 @@ for r in range(runs):
                 ax.plot(expl[0], expl[1], color='purple', marker='*', linestyle='None')
         ax.set_xlim([-1.1, 1.1])
         ax.set_ylim([-1.1, 1.1])
-        fig.savefig(os.path.join(save_directory, 'exploration-' + str(it) + '.png'))
+        fig.savefig(os.path.join(save_directory, 'exploration-' + str(it) + picture_file_format))
         plt.close(fig)
 
         # plot the current basic functions of the inverse model learner
@@ -191,7 +193,7 @@ for r in range(runs):
         for i in range(len(sgb.invmodel.center.C)):
             circ = mpl.patches.Circle((sgb.invmodel.center.C[i][0], sgb.invmodel.center.C[i][1]), radius=sgb.invmodel.center.radius, edgecolor = 'orange', facecolor='orange', alpha = 0.5)
             plt.gca().add_patch(circ)
-        fig.savefig(os.path.join(save_directory, 'invmodel-' + str(it) + '.png'))
+        fig.savefig(os.path.join(save_directory, 'invmodel-' + str(it) + picture_file_format))
         plt.close(fig)
 
         # plot the current workspace state
@@ -199,7 +201,7 @@ for r in range(runs):
         for i in range(len(sgb.wsm.S.C)):
             circ = mpl.patches.Circle((sgb.wsm.S.C[i][0], sgb.wsm.S.C[i][1]), radius=sgb.wsm.S.radius, edgecolor = 'darkgrey', facecolor='darkgrey', alpha = 0.5)
             plt.gca().add_patch(circ)
-        fig.savefig(os.path.join(save_directory, 'wsm-' + str(it) + '.png'))
+        fig.savefig(os.path.join(save_directory, 'wsm-' + str(it) + picture_file_format))
         plt.close(fig)
 
 		# write information to file
