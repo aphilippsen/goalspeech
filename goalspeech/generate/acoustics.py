@@ -4,6 +4,7 @@ import os
 import random
 import scipy
 import torch
+import warnings
 
 # plotting
 import matplotlib as mpl
@@ -269,8 +270,11 @@ class AmbientSpeech:
             self.normFeatures_for_GS[i*non_invalids_max:i*non_invalids_max+non_invalids_max] = self.normFeatures[real_idcs]
             self.classifications_for_GS[i*non_invalids_max:i*non_invalids_max+non_invalids_max] = self.classifications[real_idcs]
         
-        # TODO check this: why should i use rawFeatures here? I delete them for now to save space
         if self.embMethod == 'f':
+        
+            if self.useModelSpace:
+                warnings.warn("Using embMethod f (directly use first dimensions of features) and the goal space representation together does not make much sense, consider changing the configuration.")
+        
             # use features directly
             #indices = 1:self.targetDim
             if self.featureMode == 'formants':
@@ -278,12 +282,14 @@ class AmbientSpeech:
                     self.mappedData[i,:] = self.normFeatures_for_GS[i][0,0:self.targetDim]
                 self.mappingLearner = FakeLearner(np.size(self.normFeatures_for_GS[0]), self.targetDim)
             elif self.featureMode == 'formants_full':
+
                 for i in range(np.size(self.normFeatures_for_GS,0)):
                     # take the mean of all formants
-                    self.mappedData[i,:] = self.normalize(np.mean(self.rawFeatures[i],0))[0:self.targetDim]
+                    self.mappedData[i,:] = np.mean(self.normFeatures_for_GS[i],0)[0:self.targetDim]
+                    #self.mappedData[i,:] = self.normalize(np.mean(self.rawFeatures[i],0))[0:self.targetDim]
                 self.mappingLearner = FakeLearner(np.size(self.normFeatures_for_GS[0]), self.targetDim, [], lambda x: np.mean(x,0))
             else:
-                raise Exception("Error in generateGoalSpace(): featureMode " + self.featureMode + " does not support goal space generation method " + self.embMethod)
+                raise ValueError("Error in generateGoalSpace(): featureMode " + self.featureMode + " does not support goal space generation method " + self.embMethod)
 
         elif self.embMethod == 'pca':
             # Use PCA for dimension reduction
