@@ -6,23 +6,21 @@ import scipy.io.wavfile
 
 from goalspeech.experiment import load_experiment
 from goalspeech.evaluate import competence, distance
+from goalspeech.utils.statistics import get_mean_and_confidence_interval
 
+# vowels, first submission version
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/act-ad/"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/act-fi/"
-main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-ad/"
-#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-fi/"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-ad/"
+main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-fi/"
 runs=30
 
+# syllables, first submission version
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/syllables_aa_baa_maa/"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-3_17-51_2610_act-fi"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-4_21-22_4451_noa-ad"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-6_20-31_4362"
 #runs=3
-
-#main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-1_13-26_3295/"
-#main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-3_17-51_2610"
-#main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-4_21-22_4451"
-#runs=1
 
 
 # TODO read it from config file
@@ -30,9 +28,10 @@ max_epochs = 500
 evaluation_interval = 10
 
 # which evaluations to perform
-generate_sounds = False
+generate_sounds = True
 generate_generalization_sounds = False
-generate_interpolations = False
+generate_interpolations = True
+evaluate_interpolations = True
 
 interp_factor = 0.1
 interpolations = np.arange(0, 1+interp_factor, interp_factor)
@@ -87,6 +86,7 @@ for r in range(runs):
         evalCompetence[r][it,:] = evalCompetence[r][it-1,:]
 
     # reload experiment of best iteration if available
+    """
     try:
         # TODO fix! even if loading it, the epochs are not correct later.... use min_error_it maybe
         expData2 = load_experiment(results_dir, "results-best.pickle", sp=expData.sp, ambSp=expData.ambSp, arData=expData.arData)
@@ -99,7 +99,8 @@ for r in range(runs):
         # loaded results are already best or no individually stored results
         if str(min_error_it*evaluation_interval<max_epochs):
             print("Best results' network cannot be loaded.")
-
+    """
+    
     # store which classes were explored at which iteration
     class_per_ep[r] = np.zeros((max_epochs,))
     for i in range(len(expData.gb.competenceHistory)): # number of classes
@@ -178,8 +179,10 @@ if generate_sounds:
 
 meanError = np.mean(evalError)
 stdError = np.std(evalError)
-meanComp = np.mean(evalCompetence)
-stdComp = np.std(evalCompetence)
+#meanComp = np.mean(evalCompetence)
+#stdComp = np.std(evalCompetence)
+(meanComp, comp_conf_1, comp_conf_2) = get_mean_and_confidence_interval(np.array(list(evalCompetence)), confidence = 0.95, axis=0)
+stdComp = meanComp - comp_conf_1
 
 np.save(os.path.join(main_results_dir, "evalError.npy"), evalError)
 np.save(os.path.join(main_results_dir, "evalCompetence.npy"), evalCompetence)
@@ -259,6 +262,7 @@ plt.close()
 # plot the weights of the babbled speech sounds over time
 colors=['red', 'green', 'blue', 'cyan', 'magenta', 'darkorange', 'navy', 'yellow', 'black', 'purple']
 
+"""
 fig = plt.figure('weights history', figsize=(15,10))
 plt.rcParams.update({'font.size':20, 'legend.fontsize':20})
 ax = fig.add_subplot(111)
@@ -276,6 +280,7 @@ if not weights[0] is None:
 plt.legend(expData.ambSp.sequences)
 plt.savefig(os.path.join(main_results_dir, "weights-history.pdf"))
 plt.close()
+"""
 
 """
 fig = plt.figure('weights history per weighting scheme', figsize=(15,10))
@@ -317,6 +322,7 @@ with open(os.path.join(main_results_dir, "iterations-comps.txt"), "w") as f:
             f.write("\t" + str(meanComp[t,i]) + "\t" + str(0.5*stdComp[t,i]))
         f.write("\n")
 
+"""
 # store variance instead of standard deviation
 iterations = np.arange(0,max_epochs,evaluation_interval)+evaluation_interval
 with open(os.path.join(main_results_dir, "iterations-comps-var.txt"), "w") as f:
@@ -329,7 +335,7 @@ with open(os.path.join(main_results_dir, "iterations-comps-var.txt"), "w") as f:
         for i in range(len(expData.ambSp.sequences)):
             f.write("\t" + str(meanComp[t,i]) + "\t" + str(stdComp[t,i]*stdComp[t,i]))
         f.write("\n")
-        
+"""     
         
 # write ar noise to text file
 iterations = np.arange(0, max_epochs)
@@ -398,8 +404,7 @@ std_gen_noafi = np.std(np.concatenate(gen_noafi).reshape((-1,6)),axis=0)
 #plt.plot(gs_interp[0][3][:,0], gs_interp[0][3][:,1])
 #plt.plot(gs_interp[0][4][:,0], gs_interp[0][4][:,1])
 #plt.show()
-
-try:
+if evaluate_interpolations:
     gs_interp = np.load(os.path.join(main_results_dir, "gs_interpolations.npy"), allow_pickle=True)
     neutralIdx = expData.ambSp.sequences.index(expData.config["ambientSpeech"]["neutral"]) 
 
@@ -429,8 +434,10 @@ try:
                 f.write("\n")
 
     # take the mean across different runs
-    mean_interp = np.mean(dists, axis=0)
-    std_interp = np.std(dists, axis=0)
+    # mean_interp = np.mean(dists, axis=0)
+    # std_interp = np.std(dists, axis=0)
+    (mean_interp, conf_1, conf_2) = get_mean_and_confidence_interval(dists, confidence = 0.95, axis = 0)
+    std_interp = mean_interp - conf_1
     with open(os.path.join(main_results_dir, "interpolation-gs-dist-to-target.txt"), "w") as f:
         f.write('t')
         for i in range(len(expData.ambSp.sequences)):
@@ -440,7 +447,7 @@ try:
         for t in range(len(gs_interp[0][0])):
             f.write(str(interpolations[t]))
             for s in range(len(gs_interp[0])):
-                f.write("\t" + str(mean_interp[s, t]) + "\t" + str(0.5*std_interp[s, t]))
+                f.write("\t" + str(mean_interp[s, t]) + "\t" + str(std_interp[s, t]))
             f.write("\n")
 
 
@@ -471,6 +478,8 @@ try:
 
     mean_interp = np.mean(dists, axis=0)
     std_interp = np.std(dists, axis=0)
+    (mean_interp, conf_1, conf_2) = get_mean_and_confidence_interval(dists, confidence = 0.95, axis = 0)
+    std_interp = mean_interp - conf_1
     with open(os.path.join(main_results_dir, "interpolation-ar-dist-to-target.txt"), "w") as f:
         f.write('t')
         for i in range(len(expData.ambSp.sequences)):
@@ -480,10 +489,8 @@ try:
         for t in range(len(ar_interp[0][0])):
             f.write(str(interpolations[t]))
             for s in range(len(ar_interp[0])):
-                f.write("\t" + str(mean_interp[s, t]) + "\t" + str(0.5*std_interp[s, t]))
+                f.write("\t" + str(mean_interp[s, t]) + "\t" + str(std_interp[s, t]))
             f.write("\n")
-except:
-    print("Interpolation could not be evaluated.")
 
 
 

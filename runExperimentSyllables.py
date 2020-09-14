@@ -4,7 +4,8 @@ import os
 import random
 import scipy
 
-import matplotlib as mpl
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from goalspeech.generate.acoustics import AmbientSpeech
@@ -191,7 +192,7 @@ for r in range(runs):
         # plot the current basic functions of the inverse model learner
         (fig, ax) = ambSp.plot()
         for i in range(len(sgb.invmodel.center.C)):
-            circ = mpl.patches.Circle((sgb.invmodel.center.C[i][0], sgb.invmodel.center.C[i][1]), radius=sgb.invmodel.center.radius, edgecolor = 'orange', facecolor='orange', alpha = 0.5)
+            circ = matplotlib.patches.Circle((sgb.invmodel.center.C[i][0], sgb.invmodel.center.C[i][1]), radius=sgb.invmodel.center.radius, edgecolor = 'orange', facecolor='orange', alpha = 0.5)
             plt.gca().add_patch(circ)
         fig.savefig(os.path.join(save_directory, 'invmodel-' + str(it) + picture_file_format))
         plt.close(fig)
@@ -199,7 +200,7 @@ for r in range(runs):
         # plot the current workspace state
         (fig, ax) = ambSp.plot()
         for i in range(len(sgb.wsm.S.C)):
-            circ = mpl.patches.Circle((sgb.wsm.S.C[i][0], sgb.wsm.S.C[i][1]), radius=sgb.wsm.S.radius, edgecolor = 'darkgrey', facecolor='darkgrey', alpha = 0.5)
+            circ = matplotlib.patches.Circle((sgb.wsm.S.C[i][0], sgb.wsm.S.C[i][1]), radius=sgb.wsm.S.radius, edgecolor = 'darkgrey', facecolor='darkgrey', alpha = 0.5)
             plt.gca().add_patch(circ)
         fig.savefig(os.path.join(save_directory, 'wsm-' + str(it) + picture_file_format))
         plt.close(fig)
@@ -257,5 +258,9 @@ for r in range(runs):
     save_experiment(save_directory, "results", config, sgb, ambSp, arData, evalErrorHistory, evalCompetenceHistory, weightsHistory)
 
     print("done with run " + str(r))
-    ambSp.octave_binding.close()
+    try:
+        ambSp.octave_binding.close()
+    except:
+        pass
+        
 
