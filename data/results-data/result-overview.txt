@@ -1,0 +1,32 @@
+Overview of results:
+
+vowels/formants_average
+-------------------------
+Acoustic features: Formants
+Goal space generation method: Average formants F1 and F2
+
+vowels/formants_modelspace
+----------------------------
+Acoustic features: Formants
+Goal space generation method: Model space representation, projected via PCA to 10 dimensions, via LDA to 2 dimensions
+
+syllables/gbfb_modelspace
+---------------------------
+Acoustic features: Gabor filterbank features (GBFB)
+Goal space generation method: Model space representation, projected via PCA to 10 dimensions, via LDA to 2 dimensions
+
+syllables/gbfb_pcalda
+-----------------------
+Acoustic features: Gabor filterbank features (GBFB)
+Goal space generation method: Directly projected via PCA to 10 dimensions, via LDA to 2 dimensions
+
+syllables/mfcc_modelspace
+---------------------------
+Acoustic features: Mel-frequency cepstral coefficients (MFCC)
+Goal space generation method: Model space representation, projected via PCA to 10 dimensions, via LDA to 2 dimensions
+
+syllables/mfcc_pcalda
+-----------------------
+Acoustic features: Mel-frequency cepstral coefficients (MFCC)
+Goal space generation method: Directly projected via PCA to 10 dimensions, via LDA to 2 dimensions
+
