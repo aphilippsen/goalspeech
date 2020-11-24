@@ -2,6 +2,7 @@ import numpy as np
 from dtw import dtw
 from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
+import time
 
 class WeightingScheme:
     def __init__(self, gb):
@@ -96,98 +97,29 @@ class SyllableStructureWeighting(WeightingScheme):
                 h.append(np.sum(structure_home[j:j+self.eval_window_width]))
             self.compare_structures.append(np.array(h, dtype='float'))
 
-
-    def calcWeightsOld(self):
-        import time
-
-        start = time.time()
-
-        w = np.zeros(self.gb.numRollouts)
-
-        dists = np.zeros(len(self.gb.allWavs))
-        for i in range(len(self.gb.allWavs)):
-            structure = np.abs(self.gb.allWavs[i])
-            s = []
-            for j in range(0, len(structure) - len(structure)%self.eval_window_width-self.eval_window_width, self.eval_window_width):
-                s.append(np.sum(structure[j:j+self.eval_window_width]))
-
-            #import sounddevice as sd; sd.play(self.gb.allWavs[i])
-            euclidean_norm = lambda x, y: np.abs(x - y)
-
-            try:
-                # d, cost_matrix, acc_cost_matrix, path = dtw(np.array(s,dtype='float'), h, dist=euclidean_norm) # w=20
-                min_d = self.max_limit * 32767
-                for k in [0]:#range(len(self.compare_structures)):
-                    new_d, cost_matrix, acc_cost_matrix, path = dtw(np.array(s,dtype='float'), self.compare_structures[k], dist=euclidean_norm) # w=20
-                    if new_d < min_d:
-                        min_d = new_d
-
-            except:
-                min_d = self.max_limit * 32767
-            dists[i] = min_d
-            #print(d)
-            #import pdb; pdb.set_trace()
-
-        print(dists)
-        # clip to range
-        dists = dists / 32767 # scale to max sound amplitude of 1
-        dists[dists>self.max_limit] = self.max_limit
-        dists[dists<self.min_limit] = self.min_limit
-        dists = dists - self.min_limit
-        w = 1 - dists/np.max(dists)
-        
-        end = time.time()
-        print('CalcWeights (SyllableWeighting): elapsed time (in sec) ' + str(end - start))
-
-        return w
-
-    # Improving the DTW to not require the eval_window_width
-    
     
     def calcWeights(self):
-    
-        #print('Comparison to previous function:')
-        #wOld = self.calcWeightsOld()
-        #print(wOld)
-    
-        #import time
-        #start = time.time()
-        
         jump_size = 100
-        # one weight for each rollout should be computed
         w = np.zeros(self.gb.numRollouts)
-        dists = np.zeros(len(self.gb.allWavs))
+        dists_100 = np.zeros(len(self.gb.allWavs))
 
         comp_sound = np.abs(self.compare_sounds[0][0])
-                        
+        
         for i in range(len(self.gb.allWavs)):
             current_sound = np.abs(self.gb.allWavs[i])
-
         
-            min_d = self.max_limit * 32767
-            #for k in [0]: # range(len(self.compare_sounds)):
             distance, _ = fastdtw(current_sound[0:len(current_sound):jump_size], comp_sound[0:len(comp_sound):jump_size], dist=euclidean)
-            if distance < min_d:
-                min_d = distance
+            dists_100[i] = distance
+        #dists_100 = dists_100 / len(current_sound[0:len(current_sound):jump_size])
 
-            #except:
-            #    min_d = self.max_limit * 32767
-            
-            dists[i] = min_d
-
-        print(dists)
-        # clip to range
-        dists = dists / 32767
-        dists[dists>self.max_limit] = self.max_limit
+        dists = dists_100
+        
+        if self.max_limit > 0:
+            dists[dists>self.max_limit] = self.max_limit
         dists[dists<self.min_limit] = self.min_limit
         dists = dists - self.min_limit
+        
         w = 1 - dists/np.max(dists)
 
-        #end = time.time()
-        #print('CalcWeights (SyllableWeighting): elapsed time (in sec) ' + str(end - start))
-        
-        #np.save('wOld_' + str(end) + '.npy', wOld)
-        #np.save('wNew_' + str(end) + '.npy', w)
-        
         return w
 

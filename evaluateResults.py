@@ -8,30 +8,44 @@ from goalspeech.experiment import load_experiment
 from goalspeech.evaluate import competence, distance
 from goalspeech.utils.statistics import get_mean_and_confidence_interval
 
-# vowels, first submission version
+# vowels, F, MS, PCALDA
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/act-ad/"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/act-fi/"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-ad/"
-main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-fi/"
-runs=30
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/noa-fi/"
+#runs=30
 
-# syllables, first submission version
+# vowels, F, direct
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/fdirect_act-ad"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/fdirect-act-fi"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/fdirect_noa-ad"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/vowels/fdirect_noa-fi"
+#runs=20
+
+
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/syllables_aa_baa_maa/"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-3_17-51_2610_act-fi"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-4_21-22_4451_noa-ad"
 #main_results_dir = "/home/anja/repos/goalspeech/data/results/2020-5-6_20-31_4362"
-#runs=3
 
+# syllables, GBFB 1
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/syllables_aa_baa_maa/gbfb1"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/syllables_aa_baa_maa/gbfb0"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/syllables_aa_baa_maa/mfcc1"
+#main_results_dir = "/home/anja/repos/goalspeech/data/results/syllables_aa_baa_maa/mfcc0"
+
+main_results_dir = "data/results/2020-11-10_15-2_6062"
+runs=3
 
 # TODO read it from config file
 max_epochs = 500
 evaluation_interval = 10
 
 # which evaluations to perform
-generate_sounds = True
+generate_sounds = False
 generate_generalization_sounds = False
-generate_interpolations = True
-evaluate_interpolations = True
+generate_interpolations = False
+evaluate_interpolations = False
 
 interp_factor = 0.1
 interpolations = np.arange(0, 1+interp_factor, interp_factor)
@@ -243,8 +257,10 @@ plt.savefig(os.path.join(main_results_dir, "competence-statistic.pdf"))
 plt.close()
 
 # plot the decrease of articulatory noise during babbling
-meanArNoise = np.mean(arNoise)
-stdArNoise = np.std(arNoise)
+#meanArNoise = np.mean(arNoise)
+#stdArNoise = np.std(arNoise)
+(meanArNoise, confar_1, confar_2) = get_mean_and_confidence_interval(np.array(list(arNoise)), confidence = 0.95, axis = 0)
+stdArNoise = meanArNoise - confar_1
 
 fig = plt.figure('Per epoch articulatory noise level', figsize=(15, 10))
 plt.rcParams.update({'font.size': 20, 'legend.fontsize': 20})
@@ -476,8 +492,8 @@ if evaluate_interpolations:
                     f.write("\t" + str(dists[run, s, t]))
                 f.write("\n")
 
-    mean_interp = np.mean(dists, axis=0)
-    std_interp = np.std(dists, axis=0)
+    #mean_interp = np.mean(dists, axis=0)
+    #std_interp = np.std(dists, axis=0)
     (mean_interp, conf_1, conf_2) = get_mean_and_confidence_interval(dists, confidence = 0.95, axis = 0)
     std_interp = mean_interp - conf_1
     with open(os.path.join(main_results_dir, "interpolation-ar-dist-to-target.txt"), "w") as f:
