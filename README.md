@@ -1,6 +1,9 @@
 # GoALSpeech: Goal-directed Articulatory Learning for Speech Acquisition #
 
-Python implementation of the original Matlab implementation used for Ph.D. thesis on
+Source code for replicating the results of the following paper:
+Philippsen, A. (2021). Goal-directed exploration for learning vowels and syllables: a computational model of speech acquisition. KI-Künstliche Intelligenz, 35(1), 53-70.
+
+This the python implementation of the original Matlab implementation used for Ph.D. thesis on
 "Learning How to Speak. Goal Space Exploration for Articulatory Skill Acquisition":
 https://pub.uni-bielefeld.de/record/2921296
 
